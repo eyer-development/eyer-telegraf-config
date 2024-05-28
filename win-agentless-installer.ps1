@@ -53,12 +53,19 @@ function SetupTelegraf {
 
     $telegrafZipPath = "$env:APPDATA\eyer\downloads\telegraf-1.30.3_windows_amd64.zip"
     $telegrafExtractPath = "$env:APPDATA\eyer\downloads\telegraf-1.30.3"
+    $telegrafConfigPath = "$env:APPDATA\eyer\downloads\eyer_agentless_telegraf.conf"
 
     Write-Host "[>_] Downloading and extracting Telegraf..."
     Download "https://dl.influxdata.com/telegraf/releases/telegraf-1.30.3_windows_amd64.zip" $telegrafZipPath
     Expand-Archive -Force -Path $telegrafZipPath -DestinationPath $telegrafExtractPath
+    
 
     Copy-Item -Path "$telegrafExtractPath\*" -Destination $eyerTelegrafPath -Recurse -Force
+    
+    Write-Host "[>_] Downloading Telegraf Eyer config..."
+    Download "https://raw.githubusercontent.com/eyer-development/public-boomi-scripts/master/eyer_agentless_telegraf.conf" $telegrafConfigPath
+    Write-Host "[>_] Patching Telegraf config..."
+    Move-Item -Path "$telegrafConfigPath" -Destination "$eyerTelegrafPath\telegraf.conf" -Force
 
     # Create a symbolic link to the Telegraf installation
     if (!(Test-Path "$telegrafPath\telegraf")) {
