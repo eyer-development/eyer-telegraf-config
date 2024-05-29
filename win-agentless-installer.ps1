@@ -30,16 +30,19 @@ function SetupJetty {
     Write-Host "[>_] Setting up Jetty..."
 
     $jettyZipPath = "$env:APPDATA\eyer\downloads\jetty-home-12.0.9.zip"
-    $jettyExtractPath = "$env:APPDATA\eyer\downloads\jetty-home-12.0.9"
+    $jettyExtractPath = "$env:APPDATA\eyer\downloads"
 
     # Download and extract Jetty
     Write-Host "[>_] Downloading and extracting Jetty..."
     Download "https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/12.0.9/jetty-home-12.0.9.zip" $jettyZipPath
     Expand-Archive -Force -Path $jettyZipPath -DestinationPath $jettyExtractPath
 
+    Write-Host "[>_] Downloading Jolokia agent..."
+    Download "https://search.maven.org/remotecontent?filepath=org/jolokia/jolokia-agent-war-unsecured/2.0.2/jolokia-agent-war-unsecured-2.0.2.war" "$env:APPDATA\eyer\downloads\jolokia-agent-war-unsecured-2.0.2.war"
+
     # Copy Jetty files to the specified locations
     Write-Host "[>_] Copying Jetty files to $jettyHome..."
-    Copy-Item -Path "$jettyExtractPath\*" -Destination $jettyHome -Recurse -Force
+    Copy-Item -Path "$jettyExtractPath\jetty-home-12.0.9\*" -Destination $jettyHome -Recurse -Force
 }
 
 function SetupTelegraf {
@@ -52,7 +55,7 @@ function SetupTelegraf {
     $telegrafPath = "C:\Program Files\InfluxData"
 
     $telegrafZipPath = "$env:APPDATA\eyer\downloads\telegraf-1.30.3_windows_amd64.zip"
-    $telegrafExtractPath = "$env:APPDATA\eyer\downloads\telegraf-1.30.3"
+    $telegrafExtractPath = "$env:APPDATA\eyer\downloads"
     $telegrafConfigPath = "$env:APPDATA\eyer\downloads\eyer_agentless_telegraf.conf"
 
     Write-Host "[>_] Downloading and extracting Telegraf..."
@@ -60,7 +63,7 @@ function SetupTelegraf {
     Expand-Archive -Force -Path $telegrafZipPath -DestinationPath $telegrafExtractPath
     
 
-    Copy-Item -Path "$telegrafExtractPath\*" -Destination $eyerTelegrafPath -Recurse -Force
+    Copy-Item -Path "$telegrafExtractPath\telegraf-1.30.3\*" -Destination $eyerTelegrafPath -Recurse -Force
     
     Write-Host "[>_] Downloading Telegraf Eyer config..."
     Download "https://raw.githubusercontent.com/eyer-development/public-boomi-scripts/master/eyer_agentless_telegraf.conf" $telegrafConfigPath
@@ -93,16 +96,19 @@ function Test-Jetty {
     # Test the URL every second for the specified duration
     while ((Get-Date) -lt $endTime) {
         try {
-            $webRequest = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 1
+            $webRequest = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 2
             if ($webRequest.StatusCode -eq 200) {
                 $success = $true
                 break
+            }
+            else {
+                $success = $false
             }
         } catch {
             $success = $false
         }
         Write-Host "."  -NoNewline
-        Start-Sleep -Seconds 1
+        Start-Sleep -Seconds 2
     }
     
     # Stop the process
@@ -180,13 +186,16 @@ cd $env:JETTY_BASE
 java -jar $env:JETTY_HOME\start.jar --add-modules=server,http,ee10-deploy
 java -jar $env:JETTY_HOME\start.jar --add-module=demos
 cp "$env:APPDATA\eyer\downloads\jolokia-agent-war-unsecured-2.0.2.war" "$env:JETTY_BASE\webapps"
-mv "$env:JETTY_BASE\webapps\jolokia-agent-war-unsecured-2.0.2.war" "$env:JETTY_BASE\webapps\jolokia.war" 
+Move-Item -Path "$env:JETTY_BASE\webapps\jolokia-agent-war-unsecured-2.0.2.war" -Destination "$env:JETTY_BASE\webapps\jolokia.war" -Force
 
 Test-Jetty
 
 # Start Telegraf
-$telegrafExePath = "$env:APPDATA\eyer\telegraf\telegraf.exe"
 Write-Host "[>_] Installing Telegraf..."
-Start-Process -FilePath $telegrafExePath -ArgumentList "--service", "install", "--config", "C:\Program Files\InfluxData\telegraf\telegraf.conf"
+$telegrafPath = "C:\Program Files\InfluxData\telegraf\telegraf.exe"
+$configPath = "C:\Program Files\InfluxData\telegraf\telegraf.conf"
+$command = "--service install --config '$configPath'"
+$process = Start-Process -FilePath "$telegrafPath" -ArgumentList "$command" -PassThru
+$process.WaitForExit()
 
 Write-Host "[>_] Installation completed"
