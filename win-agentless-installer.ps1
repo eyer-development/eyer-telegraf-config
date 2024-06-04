@@ -12,12 +12,25 @@ function PrepareFolder {
 function Download {
     param (
         [string]$url,
-        [string]$destinationPath
+        [string]$destinationPath,
+        [string]$md5Checksum
     )
 
     if (!(Test-Path $destinationPath)) {
         Write-Host "[>_] Downloading $url to $destinationPath..."
-        wget $url -UseBasicParsing -OutFile $destinationPath
+        $progresspreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri $using:url -Outfile $using:destinationPath -UseBasicParsing
+    }
+
+    if ($md5Checksum) {
+        $actualChecksum = Get-FileHash -Algorithm MD5 -Path $destinationPath | Select-Object -ExpandProperty Hash
+        if ($actualChecksum -eq $md5Checksum) {
+            Write-Host "[>_] Hash check passed."
+        }
+        else {
+            Write-Host "[>_] Hash check failed. Please check the download URL or try again later." -ForegroundColor Red
+            exit
+        }
     }
 }
 
@@ -34,11 +47,16 @@ function SetupJetty {
 
     # Download and extract Jetty
     Write-Host "[>_] Downloading and extracting Jetty..."
-    Download "https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/12.0.9/jetty-home-12.0.9.zip" $jettyZipPath
-    Expand-Archive -Force -Path $jettyZipPath -DestinationPath $jettyExtractPath
+    Download "https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/12.0.9/jetty-home-12.0.9.zip" `
+        $jettyZipPath `
+        "838E1DD769C8021C6DAA431770878E3B"
 
     Write-Host "[>_] Downloading Jolokia agent..."
-    Download "https://search.maven.org/remotecontent?filepath=org/jolokia/jolokia-agent-war-unsecured/2.0.2/jolokia-agent-war-unsecured-2.0.2.war" "$env:APPDATA\eyer\downloads\jolokia-agent-war-unsecured-2.0.2.war"
+    Download "https://search.maven.org/remotecontent?filepath=org/jolokia/jolokia-agent-war-unsecured/2.0.2/jolokia-agent-war-unsecured-2.0.2.war" `
+        "$env:APPDATA\eyer\downloads\jolokia-agent-war-unsecured-2.0.2.war" `
+        "6678B95AECFA61215DECA4128A5AAA9B"
+
+    Expand-Archive -Force -Path $jettyZipPath -DestinationPath $jettyExtractPath
 
     # Copy Jetty files to the specified locations
     Write-Host "[>_] Copying Jetty files to $jettyHome..."
@@ -59,10 +77,11 @@ function SetupTelegraf {
     $telegrafConfigPath = "$env:APPDATA\eyer\downloads\eyer_agentless_telegraf.conf"
 
     Write-Host "[>_] Downloading and extracting Telegraf..."
-    Download "https://dl.influxdata.com/telegraf/releases/telegraf-1.30.3_windows_amd64.zip" $telegrafZipPath
-    Expand-Archive -Force -Path $telegrafZipPath -DestinationPath $telegrafExtractPath
-    
+    Download "https://dl.influxdata.com/telegraf/releases/telegraf-1.30.3_windows_amd64.zip" `
+        $telegrafZipPath `
+        "E3F606029E8B691489820E54BC629ED4"
 
+    Expand-Archive -Force -Path $telegrafZipPath -DestinationPath $telegrafExtractPath
     Copy-Item -Path "$telegrafExtractPath\telegraf-1.30.3\*" -Destination $eyerTelegrafPath -Recurse -Force
     
     Write-Host "[>_] Downloading Telegraf Eyer config..."
@@ -75,7 +94,8 @@ function SetupTelegraf {
         Write-Host "[>_] Creating symbolic link to Telegraf installation..."
         PrepareFolder $telegrafPath
         New-Item -ItemType SymbolicLink -Path "$telegrafPath\telegraf" -Target $eyerTelegrafPath # | Out-Null
-    } else {
+    }
+    else {
         Write-Host "[>_] Symbolic link already exists."
     }
 }
@@ -104,7 +124,8 @@ function Test-Jetty {
             else {
                 $success = $false
             }
-        } catch {
+        }
+        catch {
             $success = $false
         }
         Write-Host "."  -NoNewline
@@ -118,7 +139,8 @@ function Test-Jetty {
     # Check success and report
     if ($success) {
         Write-Host " success"
-    } else {
+    }
+    else {
         Write-Host " fail"
     }
 }
@@ -148,7 +170,8 @@ function Test-Telegraf {
     # Check success and report
     if ($success) {
         Write-Host " success"
-    } else {
+    }
+    else {
         Write-Host " fail"
     }
 }
@@ -199,3 +222,5 @@ $process = Start-Process -FilePath "$telegrafPath" -ArgumentList "$command" -Pas
 $process.WaitForExit()
 
 Write-Host "[>_] Installation completed"
+
+explorer "%AppData%\eyer\telegraf"
