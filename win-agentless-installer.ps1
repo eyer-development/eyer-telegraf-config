@@ -19,7 +19,7 @@ function Download {
     if (!(Test-Path $destinationPath)) {
         Write-Host "[>_] Downloading $url to $destinationPath..."
         $progresspreference = 'SilentlyContinue'
-        Invoke-WebRequest -Uri $using:url -Outfile $using:destinationPath -UseBasicParsing
+        Invoke-WebRequest -Uri $url -Outfile $destinationPath -UseBasicParsing
     }
 
     if ($md5Checksum) {
