@@ -223,4 +223,4 @@ $process.WaitForExit()
 
 Write-Host "[>_] Installation completed"
 
-explorer "%AppData%\eyer\telegraf"
+explorer "$env:APPDATA\eyer\telegraf"
