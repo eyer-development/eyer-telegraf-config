@@ -1,7 +1,7 @@
 #Set your Boomi API credentials and path to Telegraf
 $TelegrafPath = 'your_telegraf_path'
-$boomi_username = "your_Boomi_token_name"
-$boomi_token = "your_Boomi_token_password"
+$boomi_username = "BOOMI_TOKEN.your_Boomi_email"
+$boomi_token = "your_Boomi_token"
 $boomiAccountId = "your_Boomi_account_Id"
 
 #--------------------------------------------------------------------------------
