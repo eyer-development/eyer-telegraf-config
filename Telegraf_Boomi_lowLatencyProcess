@@ -1,0 +1,76 @@
+# Telegraf Configuration
+[global_tags]
+
+# Configuration for telegraf agent
+[agent]
+  ## Default data collection interval for all inputs
+  interval = "60s"
+  round_interval = true
+  metric_batch_size = 10000
+  metric_buffer_limit = 100000
+  collection_jitter = "0s"
+  flush_interval = "10s"
+  flush_jitter = "5s"
+  precision = ""
+  logfile_rotation_interval = "1d"
+  logfile_rotation_max_size = "1MB"
+  hostname = ""
+  omit_hostname = false
+
+
+###############################################################################
+#                            OUTPUT PLUGINS                                   #
+###############################################################################
+
+# # A plugin that can transmit metrics over HTTP
+ [[outputs.http]]
+   url = "https://data.eyer.ai/api/telegraf/boomilowlatencyprocesses"
+    timeout = "5s"
+    method = "POST"
+    data_format = "json"
+    use_batch_format = true
+    [outputs.http.headers]
+	authenticate = "your_auth_key_goes_here"
+
+
+# # Dates measurements, tags, and fields that pass through this filter.
+ [[processors.date]]
+    field_key = "unix"
+    date_format = "unix"
+    date_offset = "-480s"
+    timezone = "UTC"
+
+
+###############################################################################
+#                            AGGREGATOR PLUGINS                               #
+###############################################################################
+
+# # Keep the aggregate basicstats of each metric passing through.
+ [[aggregators.basicstats]]
+   period = "60s"
+   drop_original = true
+   stats = ["mean"]
+
+###############################################################################
+#                            INPUT PLUGINS                                    #
+###############################################################################
+
+# # Read metrics from one or more commands that can output to stdout
+ [[inputs.exec]]
+   commands = ['powershell -command "& { . your_Telegraf_path; LowLatencyProcess }"']
+   timeout = "15s"
+
+
+# # Parse a complete file each interval
+ [[inputs.file]]
+ files = ["your_Telegraf_path/lowLatency*.json"]
+ character_encoding = "utf-16le"
+ data_format = "json_v2"
+
+# Add a subtable to use the `json_v2` parser
+ [[inputs.file.json_v2]]
+   [[inputs.file.json_v2.object]]
+   path = "result"
+   tags = ["processName","atomID","timeBlock"]
+
+
