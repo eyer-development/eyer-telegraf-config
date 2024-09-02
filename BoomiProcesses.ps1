@@ -8,7 +8,7 @@ $boomiAccountId = "your_Boomi_account_Id"
 
 function RegularProcess {
 
-$Remove = $TelegrafPath + 'regular*.json'
+$Remove = $TelegrafPath + 'regularx*.json'
 Remove-Item $Remove
 $Time = Get-Date
 $UTC = $Time.ToUniversalTime()
@@ -59,7 +59,7 @@ $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body 
 $json = $Response | ConvertTo-Json -Depth 2
 $json = $json.Replace("Long ","")
 $json = $json -replace '"(\d+)"', '$1' 
-$WriteResponse = $TelegrafPath + 'regular' + $Number
+$WriteResponse = $TelegrafPath + 'regularx' + $Number
 $json | Out-File -FilePath ($WriteResponse + '.json')
 $Number++
  }   
@@ -70,7 +70,7 @@ $Number++
 
 function LowLatencyProcess {
 
-$Remove = $TelegrafPath + 'lowLatency*.json'
+$Remove = $TelegrafPath + 'lowLatencyx*.json'
 Remove-Item $Remove
 $Time = Get-Date
 $UTC = $Time.ToUniversalTime()
@@ -122,7 +122,7 @@ $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body 
 $json = $Response | ConvertTo-Json -Depth 2
 $json = $json.Replace("Long ","")
 $json = $json -replace '"(\d+)"', '$1' 
-$WriteResponse = $TelegrafPath + 'lowLatency' + $Number
+$WriteResponse = $TelegrafPath + 'lowLatencyx' + $Number
 $json | Out-File -FilePath ($WriteResponse + '.json')
 $Number++
  }   
