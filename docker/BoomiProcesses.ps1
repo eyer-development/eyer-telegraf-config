@@ -1,8 +1,8 @@
 #Set your Boomi API credentials and path to Telegraf
-$TelegrafPath = $env:TELEGRAF_HOME
-$boomi_username = $env:BOOMI_USERNAME
-$boomi_token = $env:BOOMI_TOKEN
-$boomi_accountId = $env:BOOMI_ACCOUNT_ID
+$TelegrafPath = $Env:TELEGRAF_HOME + "/"
+$boomi_username = $Env:BOOMI_USERNAME
+$boomi_token = $Env:BOOMI_TOKEN
+$boomi_accountId = $Env:BOOMI_ACCOUNT_ID
 
 #--------------------------------------------------------------------------------
 
