@@ -27,14 +27,8 @@ echo "    Boomi Account ID: $BOOMI_ACCOUNT_ID"
 echo "    Boomi Atom IP: $BOOMI_ATOM_IP"
 
 # Start Jetty
-echo "[>_] Starting Jetty..."
-cd $JETTY_BASE
-java -jar $JETTY_HOME/start.jar
-
-# Start Telegraf
-echo "[>_] Starting Telegraf..."
-$TELEGRAF_HOME/telegraf --config $TELEGRAF_HOME/telegraf.conf &
-$TELEGRAF_HOME/telegraf --config $TELEGRAF_HOME/telegraf_boomi_processes.conf &
+echo "[>_] Starting Services..."
+supervisord -c /opt/supervisord.conf
 
 # Keep container running
 tail -f /dev/null

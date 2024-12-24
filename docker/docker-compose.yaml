@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  eyer-stack:
+    image: barlots/eyer-stack:0.9
+    container_name: eyer-stack
+    environment:
+      BOOMI_USERNAME: your_username
+      BOOMI_TOKEN: your_token
+      BOOMI_ACCOUNT_ID: your_account_id
+      BOOMI_ATOM_IP: 0.0.0.0
+      EYER_PUSH_TOKEN: eyer_token
+    restart: always

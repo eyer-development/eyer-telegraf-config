@@ -7,13 +7,14 @@ ENV JETTY_HOME=/opt/jetty \
     PATH=$PATH:/opt/telegraf
 
 # Create necessary directories
-RUN mkdir -p $JETTY_HOME $JETTY_BASE $TELEGRAF_HOME /opt/downloads
+RUN mkdir -p $JETTY_HOME $JETTY_BASE $TELEGRAF_HOME /opt/downloads $JETTY_BASE/webapps
 
 RUN apt-get update && apt-get install -y \
     curl \
     unzip \
     gnupg \
     apt-transport-https \
+    supervisor \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -33,13 +34,13 @@ RUN curl -fsSL https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/12.0.
     mv /opt/jetty-home-12.0.9/* $JETTY_HOME && \
     rm -rf /opt/jetty-home-12.0.9 /opt/downloads/jetty-home.zip
 
+# Download Jolokia
+RUN curl -fsSL https://search.maven.org/remotecontent?filepath=org/jolokia/jolokia-agent-war-unsecured/2.0.2/jolokia-agent-war-unsecured-2.0.2.war -o $JETTY_BASE/webapps/jolokia.war && \
+    echo "6678B95AECFA61215DECA4128A5AAA9B $JETTY_BASE/webapps/jolokia.war" | md5sum -c -
+
 RUN cd $JETTY_BASE && \
     java -jar $JETTY_HOME/start.jar --add-modules=server,http,ee10-deploy && \
     java -jar $JETTY_HOME/start.jar --add-module=demos
-
-# Download Jolokia
-RUN curl -fsSL https://search.maven.org/remotecontent?filepath=org/jolokia/jolokia-agent-war-unsecured/2.0.2/jolokia-agent-war-unsecured-2.0.2.war -o $JETTY_BASE/jolokia.war && \
-    echo "6678B95AECFA61215DECA4128A5AAA9B $JETTY_BASE/jolokia.war" | md5sum -c -
 
 # Download and set up Telegraf
 RUN curl -fsSL https://dl.influxdata.com/telegraf/releases/telegraf-1.30.3_linux_amd64.tar.gz -o /opt/downloads/telegraf.tar.gz && \
@@ -52,6 +53,7 @@ RUN curl -fsSL https://dl.influxdata.com/telegraf/releases/telegraf-1.30.3_linux
 EXPOSE 8080 8125
 
 COPY entrypoint.sh /opt/entrypoint.sh
+COPY supervisord.conf /opt/supervisord.conf
 COPY BoomiProcesses.ps1 $TELEGRAF_HOME/BoomiProcesses.ps1
 COPY telegraf.conf $TELEGRAF_HOME/telegraf.conf
 COPY telegraf_boomi_processes.conf $TELEGRAF_HOME/telegraf_boomi_processes.conf
