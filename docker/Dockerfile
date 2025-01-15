@@ -54,6 +54,8 @@ EXPOSE 8080 8125
 
 COPY entrypoint.sh /opt/entrypoint.sh
 COPY supervisord.conf /opt/supervisord.conf
+COPY supervisord_monitoring_only.conf /opt/supervisord_monitoring_only.conf
+
 COPY BoomiProcesses.ps1 $TELEGRAF_HOME/BoomiProcesses.ps1
 COPY telegraf.conf $TELEGRAF_HOME/telegraf.conf
 COPY telegraf_boomi_processes.conf $TELEGRAF_HOME/telegraf_boomi_processes.conf
