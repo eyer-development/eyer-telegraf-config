@@ -1,0 +1,11 @@
+services:
+  eyerdocker:
+    image: eyerai/eyerdocker:1.1
+    container_name: eyerdocker
+    environment:
+      BOOMI_USERNAME: "BOOMI_TOKEN.insert_your_email"
+      BOOMI_TOKEN: "your_boomi_token"
+      BOOMI_ACCOUNT_ID: "your_account_id"
+      BOOMI_ATOM_IP: ip_where_atom_is_hosted
+      EYER_PUSH_TOKEN: "insert_your_eyer_push_token"
+    restart: always
