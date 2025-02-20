@@ -1,0 +1,177 @@
+# # Read JMX metrics from a Jolokia REST agent endpoint
+[[inputs.jolokia2_proxy]]
+  url = "http://localhost:8080/jolokia"
+  name_override = "{{ NAME }}"
+
+  [[inputs.jolokia2_proxy.target]]
+    url = "service:jmx:rmi:///jndi/rmi://{{ IP_WITH_PORT }}/jmxrmi"
+
+  [[inputs.jolokia2_proxy.metric]]
+    name  = "Java_runtime"
+    mbean = "java.lang:type=OperatingSystem"
+    paths = ["ProcessCpuLoad"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name  = "Java_runtime"
+    mbean = "java.lang:type=OperatingSystem"
+    paths = ["SystemCpuLoad"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name  = "Java_runtime"
+    mbean = "java.lang:type=OperatingSystem"
+    paths = ["CommittedVirtualMemorySize"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name  = "Java_runtime"
+    mbean = "java.lang:type=OperatingSystem"
+    paths = ["TotalPhysicalMemorySize"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name  = "Java_runtime"
+    mbean = "java.lang:type=Memory"
+    paths = ["HeapMemoryUsage"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "ActiveMQ"
+    mbean = "org.apache.activemq:type=Broker,brokerName=atomq"
+    paths = ["MemoryPercentUsage"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=Config"
+    paths = ["Restarting"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=Config"
+    paths = ["Status"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=Config"
+    paths = ["ContainerIdentifier"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=Scheduler"
+    paths = ["ExecutingSchedulesCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=Scheduler"
+    paths = ["MissedSchedulesCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=Scheduler"
+    paths = ["ScheduleCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ProcessSummaryReportingService"
+    paths = ["PendingExecutionCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ProcessSummaryReportingService"
+    paths = ["PendingReportCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ProcessSummaryReportingService"
+    paths = ["PendingResultCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ResourceManager"
+    paths = ["LowMemory"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ResourceManager"
+    paths = ["OutOfMemory"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ResourceManager"
+    paths = ["TooManyOpenFiles"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ResourceManager"
+    paths = ["DeadlockDetected"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ResourceManager"
+    paths = ["AtomInBadState"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ExecutionManager"
+    paths = ["AverageExecutionQueueTime"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ExecutionManager"
+    paths = ["AverageExecutionTime"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ExecutionManager"
+    paths = ["LocalExecutionCounts"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ExecutionManager"
+    paths = ["LocalRunningWorkersCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ExecutionManager"
+    paths = ["MaxQueuedExecutions"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ExecutionManager"
+    paths = ["QueuedExecutionEstimatedCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ExecutionManager"
+    paths = ["QueuedExecutionTimeout"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=ExecutionManager"
+    paths = ["RunningExecutionEstimatedCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=MessageQueueFactory"
+    paths = ["PendingMessageCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "AtomProcessTrackQueue"
+    mbean = "com.boomi.container.services:type=MessageQueue,queueId=process-track"
+    paths = ["PendingUploadMessageCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "AtomAcknowledgementTrackQueue"
+    mbean = "com.boomi.container.services:type=MessageQueue,queueId=acknowledgement-track"
+    paths = ["PendingUploadMessageCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "AtomEventQueue"
+    mbean = "com.boomi.container.services:type=MessageQueue,queueId=event"
+    paths = ["PendingUploadMessageCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=MessagePollerThread"
+    paths = ["DownloadStats/connectFailureCount"]
+
+  [[inputs.jolokia2_proxy.metric]]
+    name = "Atom"
+    mbean = "com.boomi.container.services:type=MessagePollerThread"
+    paths = ["DownloadStats/deliveredMessageCount"]

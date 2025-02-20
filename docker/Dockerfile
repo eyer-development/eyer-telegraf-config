@@ -57,7 +57,8 @@ COPY supervisord.conf /opt/supervisord.conf
 COPY supervisord_monitoring_only.conf /opt/supervisord_monitoring_only.conf
 
 COPY BoomiProcesses.ps1 $TELEGRAF_HOME/BoomiProcesses.ps1
-COPY telegraf.conf $TELEGRAF_HOME/telegraf.conf
+COPY telegraf-base.conf.template /opt/telegraf-base.conf.template
+COPY telegraf-input.conf.template /opt/telegraf-input.conf.template
 COPY telegraf_boomi_processes.conf $TELEGRAF_HOME/telegraf_boomi_processes.conf
 RUN chmod +x /opt/entrypoint.sh
 

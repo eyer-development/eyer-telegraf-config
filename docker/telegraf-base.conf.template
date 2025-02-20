@@ -1,0 +1,83 @@
+# Telegraf Configuration
+[global_tags]
+
+# Configuration for telegraf agent
+[agent]
+  ## Default data collection interval for all inputs
+  interval = "5s"
+  round_interval = true
+  metric_batch_size = 10000
+  metric_buffer_limit = 100000
+  collection_jitter = "0s"
+  flush_interval = "10s"
+  flush_jitter = "5s"
+  precision = ""
+  logfile_rotation_interval = "1d"
+  logfile_rotation_max_size = "1MB"
+  hostname = ""
+  omit_hostname = false
+
+###############################################################################
+#                            OUTPUT PLUGINS                                   #
+###############################################################################
+
+# # A plugin that can transmit metrics over HTTP
+[[outputs.http]]
+  ## URL is the address to send metrics to
+  url = "https://data.eyer.ai/api/telegraf/boomiatom"
+  timeout = "5s"
+  method = "POST"
+  data_format = "json"
+  use_batch_format = true
+  [outputs.http.headers]
+    authenticate = "${EYER_PUSH_TOKEN}"
+
+###############################################################################
+#                            PROCESSOR PLUGINS                                #
+###############################################################################
+
+# # Transforms tag and field values with regex pattern
+[[processors.regex]]
+  [[processors.regex.fields]]
+    key = "ContainerIdentifier"
+    pattern = "[a-f-]+"
+    replacement = "${1}"
+
+[[processors.converter]]
+  [processors.converter.fields]
+    integer = ["AtomInBadState", "DeadlockDetected", "LowMemory", "OutOfMemory", "Restarting", "TooManyOpenFiles"]
+    float = ["ContainerIdentifier"]
+
+# # Map enum values according to given table.
+[[processors.enum]]
+  [[processors.enum.mapping]]
+    ## Name of the field to map. Globs accepted.
+    field = "Status"
+    [processors.enum.mapping.value_mappings]
+      RUNNING = 0
+      INITIALIZING = 1
+      INIT_UPDATING = 1
+      PAUSING = 1
+      PAUSED = 1
+      PAUSING_FOR_STOP = 1
+      PAUSED_FOR_STOP = 1
+      STOPPING = 1
+      STOPPED = 1
+
+###############################################################################
+#                            AGGREGATOR PLUGINS                               #
+###############################################################################
+
+# # Keep the aggregate basicstats of each metric passing through.
+[[aggregators.basicstats]]
+  ## The period on which to flush & clear the aggregator.
+  period = "60s"
+  ## If true, the original metric will be dropped by the
+  ## aggregator and will not get sent to the output plugins.
+  drop_original = true
+  ## Configures which basic stats to push as fields
+  stats = ["max", "mean", "sum"]
+
+###############################################################################
+#                            INPUT PLUGINS                                    #
+###############################################################################
