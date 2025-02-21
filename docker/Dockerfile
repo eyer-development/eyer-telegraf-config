@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM openjdk:18-jdk-slim
 
 # Set environment variables
 ENV JETTY_HOME=/opt/jetty \
