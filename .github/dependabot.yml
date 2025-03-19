@@ -4,3 +4,8 @@ updates:
     directory: "/docker"
     schedule:
       interval: "weekly"
+    groups:
+      production-updates:
+        dependency-type: "production"
+      development-updates:
+        dependency-type: "development"

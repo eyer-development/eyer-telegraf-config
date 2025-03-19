@@ -3,8 +3,59 @@ $TelegrafPath = $Env:TELEGRAF_HOME + "/"
 $boomi_username = $Env:BOOMI_USERNAME
 $boomi_token = $Env:BOOMI_TOKEN
 $boomi_accountId = $Env:BOOMI_ACCOUNT_ID
+$selected_atom_ids = $Env:SELECTED_ATOM_IDS -split "`r?`n" | Where-Object { $_ -match "\S" }
 
 #--------------------------------------------------------------------------------
+
+function BuildQueryBody {
+    param (
+        [Parameter(Mandatory=$true)][string]$property,
+        [Parameter(Mandatory=$true)][string]$operator,
+        [Parameter(Mandatory=$true)][array]$arguments,
+        [Parameter(Mandatory=$false)][array]$atomIds = @()
+    )
+    
+    $mainCondition = @{
+        "argument" = $arguments
+        "operator" = $operator
+        "property" = $property
+    }
+    
+    if ($atomIds.Count -gt 0) {
+        $atomExpressions = @()
+        foreach ($atomId in $atomIds) {
+            $atomExpressions += @{
+                "argument" = @($atomId)
+                "operator" = "EQUALS"
+                "property" = "atomId"
+            }
+        }
+
+        $body = @{
+            "QueryFilter" = @{
+                "expression" = @{
+                    "operator" = "and"
+                    "nestedExpression" = @(
+                        $mainCondition,
+                        @{
+                "operator" = "or"
+                            "nestedExpression" = $atomExpressions
+                        }
+                    )
+                }
+            }
+        }
+    } else {
+        # If no atomIds, use a simpler structure with just the main condition
+        $body = @{
+            "QueryFilter" = @{
+                "expression" = $mainCondition
+            }
+        }
+    }
+    
+    return $body | ConvertTo-Json -Depth 10
+}
 
 function RegularProcess {
 
@@ -23,21 +74,15 @@ function RegularProcess {
         'Accept'       = 'application/json'
         'Content-Type' = 'application/json'
     }
-    $Body = @"
-{
-    "QueryFilter":
-    {
-    "expression":
-    {
-    "argument": ["$UTC_Final"],
-    "operator": "GREATER_THAN_OR_EQUAL",
-    "property": "recordedDate"
-        }
-    }
-}
-"@
+
+    $BodyJson = BuildQueryBody `
+        -property "recordedDate" `
+        -operator "GREATER_THAN_OR_EQUAL" `
+        -arguments @($UTC_Final) `
+        -atomIds $selected_atom_ids
+
     #Fetch initial 100 transactions
-    $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $Body
+    $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $BodyJson
     $json = $Response | ConvertTo-Json -Depth 2
     $json = $json.Replace("Long ", "")
     $json = $json -replace '"(\d+)"', '$1'
@@ -86,21 +131,15 @@ function LowLatencyProcess {
         'Accept'       = 'application/json'
         'Content-Type' = 'application/json'
     }
-    $Body = @"
-{
-    "QueryFilter":
-    {
-    "expression":
-    {
-    "argument": ["$UTC_Final1","$UTC_Final2"],
-    "operator": "BETWEEN",
-    "property": "timeBlock"
-        }
-    }
-}
-"@
+
+    $BodyJson = BuildQueryBody `
+        -property "timeBlock" `
+        -operator "BETWEEN" `
+        -arguments @($UTC_Final1, $UTC_Final2) `
+        -atomIds $selected_atom_ids
+
     #Fetch initial 100 transactions
-    $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $Body
+    $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $BodyJson
     $json = $Response | ConvertTo-Json -Depth 2
     #$json = $json.Replace("Long ","")
     #$json = $json -replace '"(\d+)"', '$1'
@@ -128,5 +167,5 @@ function LowLatencyProcess {
         }   
     }
 }
- 
+
 
