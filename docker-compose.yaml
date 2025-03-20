@@ -10,5 +10,8 @@ services:
 #      BOOMI_ATOM_IP: |
 #        192.168.2.1:1233|service_name
 #        192.168.2.2
+      SELECTED_ATOM_IDS: |
+        e5d8341a-fa1c-4c73-bcae-23bab76ed4a2
+        8e7ad78e-c2d6-4f31-b897-f107623ce781
       EYER_PUSH_TOKEN: "insert_your_eyer_push_token"
     restart: always
