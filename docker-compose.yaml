@@ -1,6 +1,6 @@
 services:
   eyerdocker:
-    image: eyerai/eyerdocker:1.2.2
+    image: eyerai/eyerdocker:1.3
     container_name: eyerdocker
     environment:
       BOOMI_USERNAME: "BOOMI_TOKEN.insert_your_email"
