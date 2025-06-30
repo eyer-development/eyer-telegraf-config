@@ -57,6 +57,22 @@ function BuildQueryBody {
     return $body | ConvertTo-Json -Depth 10
 }
 
+function Convert-Status {
+    param (
+        [string]$status
+    )
+    switch ($status.ToUpper()) {
+        "ABORTED" { return 10 }
+        "COMPLETE" { return 0 }
+        "COMPLETE_WARN" { return 0 }
+        "DISCARDED" { return 10 }
+        "ERROR" { return 10 }
+        "INPROCESS" { return 0 }
+        "STARTED" { return 0 }
+        default { return $status }  # if unknown status, return original
+    }
+}
+
 function RegularProcess {
 
     $Remove = $TelegrafPath + 'regularx*.json'
@@ -83,6 +99,11 @@ function RegularProcess {
 
     #Fetch initial 100 transactions
     $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $BodyJson
+
+    foreach ($record in $Response.result) {
+        $record.status = Convert-Status -status $record.status
+    }
+
     $json = $Response | ConvertTo-Json -Depth 2
     $json = $json.Replace("Long ", "")
     $json = $json -replace '"(\d+)"', '$1'
@@ -101,6 +122,9 @@ function RegularProcess {
 "@
 
             $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $Body
+            foreach ($record in $Response.result) {
+                $record.status = Convert-Status -status $record.status
+            }
             $json = $Response | ConvertTo-Json -Depth 2
             $json = $json.Replace("Long ", "")
             $json = $json -replace '"(\d+)"', '$1' 
@@ -140,6 +164,9 @@ function LowLatencyProcess {
 
     #Fetch initial 100 transactions
     $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $BodyJson
+    foreach ($record in $Response.result) {
+       $record.status = Convert-Status -status $record.status
+    }
     $json = $Response | ConvertTo-Json -Depth 2
     #$json = $json.Replace("Long ","")
     #$json = $json -replace '"(\d+)"', '$1'
@@ -158,6 +185,9 @@ function LowLatencyProcess {
 "@
 
             $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $Body
+            foreach ($record in $Response.result) {
+                $record.status = Convert-Status -status $record.status
+            }
             $json = $Response | ConvertTo-Json -Depth 2
             $json = $json.Replace("Long ", "")
             $json = $json -replace '"(\d+)"', '$1' 
