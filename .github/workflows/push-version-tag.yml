@@ -1,0 +1,107 @@
+name: Create & Push Tag (release)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Version tag (e.g. v1.2.3)"
+        required: true
+        type: string
+      tag_message:
+        description: "Annotated tag message"
+        required: false
+        default: "Release"
+        type: string
+      target_ref:
+        description: |
+          Commit SHA or ref to tag.
+          Must be on the default branch.
+          Leave blank to tag the default branch's HEAD.
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  create_tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write 
+
+    env:
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      ACTOR:          ${{ github.triggering_actor || github.actor }}
+      TAG_NAME:       ${{ github.event.inputs.tag_name }}
+      TAG_MSG:        ${{ github.event.inputs.tag_message }}
+      TARGET_IN:      ${{ github.event.inputs.target_ref }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0 
+
+      - name: Fetch default branch
+        run: git fetch origin ${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}
+
+      - name: Determine TARGET (blank ⇒ default branch HEAD)
+        id: target
+        run: |
+          TARGET="${TARGET_IN:-$(git rev-parse origin/${DEFAULT_BRANCH})}"
+          echo "target=$TARGET" >>"$GITHUB_OUTPUT"
+        env:
+          TARGET_IN: ${{ env.TARGET_IN }}
+
+      - name: Verify TARGET is on ${DEFAULT_BRANCH}
+        run: |
+          TARGET="${{ steps.target.outputs.target }}"
+          git merge-base --is-ancestor "$TARGET" "origin/${DEFAULT_BRANCH}" \
+            || { echo "::error::❌ Commit $TARGET is NOT on ${DEFAULT_BRANCH}. Aborting."; exit 1; }
+
+      - name: Fetch all tags
+        run: git fetch --tags --force
+
+      - name: Validate tag (must be higher that latest version)
+        run: |
+          TAG="${TAG_NAME}"
+
+          NEW_VER="${TAG#v}"; NEW_VER="${NEW_VER#V}"       # strip leading v/V
+          EXISTING=$(git tag --list | grep -E '^[vV]?[0-9]+' || true)
+
+          if [ -z "$EXISTING" ]; then
+            echo "No existing version tags – proceeding."
+            exit 0
+          fi
+
+          HIGHEST=$(printf '%s\n' $EXISTING | sed 's/^[vV]//' | sort -V | tail -n 1)
+          echo "Highest existing version: v${HIGHEST}"
+
+          MAX=$(printf '%s\n%s\n' "$HIGHEST" "$NEW_VER" | sort -V | tail -n 1)
+          if [ "$MAX" != "$NEW_VER" ]; then
+            echo "::error::❌ ${TAG} is lower than or equal to existing v${HIGHEST}. Aborting."
+            exit 1
+          fi
+
+      - name: Resolve actor e-mail
+        id: email
+        env: 
+          ACTOR: ${{ env.ACTOR }}
+        run: |
+          EMAIL="$(gh api users/${ACTOR} --jq .email || true)"
+          if [ -z "$EMAIL" ] || [ "$EMAIL" = "null" ]; then
+            EMAIL="${ACTOR}@users.noreply.github.com"
+          fi
+          echo "email=$EMAIL" >>"$GITHUB_OUTPUT"
+
+      - name: Configure git tagger
+        run: |
+          git config user.name  "${ACTOR}"
+          git config user.email "${{ steps.email.outputs.email }}"
+        env: 
+          ACTOR: ${{ env.ACTOR }}
+
+      - name: Create annotated tag
+        run: |
+          git tag -a "${TAG_NAME}" -m "${TAG_MSG}" "${{ steps.target.outputs.target }}"
+
+      - name: Push tag
+        run: git push origin "${TAG_NAME}"
