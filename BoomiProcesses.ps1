@@ -6,6 +6,23 @@ $boomiAccountId = "your_Boomi_account_Id"
 
 #--------------------------------------------------------------------------------
 
+ function Convert-Status {
+    param (
+        [string]$status
+    )
+    switch ($status.ToUpper()) {
+        "ABORTED" { return 10 }
+        "COMPLETE" { return 0 }
+        "COMPLETE_WARN" { return 0 }
+        "DISCARDED" { return 10 }
+        "ERROR" { return 10 }
+        "INPROCESS" { return 0 }
+        "STARTED" { return 0 }
+        default { return $status }  # if unknown status, return original
+    }
+}
+
+
 function RegularProcess {
 
 $Remove = $TelegrafPath + 'regularx*.json'
@@ -38,6 +55,11 @@ $Body = @"
 "@
 #Fetch initial 100 transactions
 $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $Body
+
+foreach ($record in $Response.result) {
+    $record.status = Convert-Status -status $record.status
+}
+
 $json = $Response | ConvertTo-Json -Depth 2
 $json = $json.Replace("Long ","")
 $json = $json -replace '"(\d+)"', '$1'
@@ -56,6 +78,11 @@ $Body = @"
 "@
 
 $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $Body
+
+foreach ($record in $Response.result) {
+    $record.status = Convert-Status -status $record.status
+}
+
 $json = $Response | ConvertTo-Json -Depth 2
 $json = $json.Replace("Long ","")
 $json = $json -replace '"(\d+)"', '$1' 
@@ -101,6 +128,11 @@ $Body = @"
 "@
 #Fetch initial 100 transactions
 $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $Body
+
+foreach ($record in $Response.result) {
+    $record.status = Convert-Status -status $record.status
+}
+
 $json = $Response | ConvertTo-Json -Depth 2
 #$json = $json.Replace("Long ","")
 #$json = $json -replace '"(\d+)"', '$1'
@@ -119,6 +151,11 @@ $Body = @"
 "@
 
 $Response = Invoke-RestMethod -Headers $headers -Method $Method -URI $URI -Body $Body
+
+foreach ($record in $Response.result) {
+    $record.status = Convert-Status -status $record.status
+}
+
 $json = $Response | ConvertTo-Json -Depth 2
 $json = $json.Replace("Long ","")
 $json = $json -replace '"(\d+)"', '$1' 
@@ -129,4 +166,3 @@ $Number++
 }
 }
  
-
