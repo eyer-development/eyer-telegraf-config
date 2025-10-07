@@ -25,7 +25,7 @@
 [[outputs.http]]
   ## URL is the address to send metrics to
   url = "https://data.eyer.ai/api/telegraf/boomiatom"
-  timeout = "5s"
+  timeout = "20s"
   method = "POST"
   data_format = "json"
   use_batch_format = true
