@@ -38,7 +38,7 @@ function BuildQueryBody {
                     "nestedExpression" = @(
                         $mainCondition,
                         @{
-                "operator" = "or"
+                            "operator" = "or"
                             "nestedExpression" = $atomExpressions
                         }
                     )
@@ -76,11 +76,15 @@ function Convert-Status {
 function RegularProcess {
 
     $Remove = $TelegrafPath + 'regularx*.json'
-    Remove-Item $Remove
+    Remove-Item $Remove -ErrorAction SilentlyContinue
+
+    # Always query the complete previous minute
+    # Example: if current time is 12:02:05, query from 12:01:00 to 12:01:59
     $Time = Get-Date
     $UTC = $Time.ToUniversalTime()
-    $UTCMinus = $UTC.AddMinutes(-1)
-    $UTC_Final = $UTCMinus.ToString("yyyy-MM-ddTHH:mm:00Z")
+    $PreviousMinute = $UTC.AddMinutes(-1)
+    $UTC_Final1 = $PreviousMinute.ToString("yyyy-MM-ddTHH:mm:00Z")
+    $UTC_Final2 = $PreviousMinute.ToString("yyyy-MM-ddTHH:mm:59Z")
 
     $Method = "POST"
     $URI = "https://api.boomi.com/api/rest/v1/" + $boomi_accountId + "/ExecutionRecord/query"
@@ -92,9 +96,9 @@ function RegularProcess {
     }
 
     $BodyJson = BuildQueryBody `
-        -property "recordedDate" `
-        -operator "GREATER_THAN_OR_EQUAL" `
-        -arguments @($UTC_Final) `
+        -property "executionTime" `
+        -operator "BETWEEN" `
+        -arguments @($UTC_Final1, $UTC_Final2) `
         -atomIds $selected_atom_ids
 
     #Fetch initial 100 transactions
@@ -140,7 +144,8 @@ function RegularProcess {
 function LowLatencyProcess {
 
     $Remove = $TelegrafPath + 'lowLatencyx*.json'
-    Remove-Item $Remove
+    Remove-Item $Remove -ErrorAction SilentlyContinue
+    
     $Time = Get-Date
     $UTC = $Time.ToUniversalTime()
     $UTCOffset = $UTC.AddMinutes(-6)
@@ -168,8 +173,8 @@ function LowLatencyProcess {
        $record.status = Convert-Status -status $record.status
     }
     $json = $Response | ConvertTo-Json -Depth 2
-    #$json = $json.Replace("Long ","")
-    #$json = $json -replace '"(\d+)"', '$1'
+    $json = $json.Replace("Long ", "")
+    $json = $json -replace '"(\d+)"', '$1'
     $WriteResponseInitial = $TelegrafPath + 'lowLatency0.json'
     $json | Out-File -FilePath $WriteResponseInitial
 
@@ -197,5 +202,3 @@ function LowLatencyProcess {
         }   
     }
 }
-
-
