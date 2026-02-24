@@ -96,7 +96,7 @@ function RegularProcess {
     }
 
     $BodyJson = BuildQueryBody `
-        -property "executionTime" `
+        -property "recordedDate" `
         -operator "BETWEEN" `
         -arguments @($UTC_Final1, $UTC_Final2) `
         -atomIds $selected_atom_ids
